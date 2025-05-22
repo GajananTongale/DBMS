@@ -1,0 +1,107 @@
+
+DML 20 - BANK ABC OBC.txt
+==========================
+
+Question:
+---------
+Create the following tables and add primary key and foreign key wherever applicable. Insert data into the tables:
+
+1. Deposit (actno, cname, bname, amount, adate)
+2. Branch (bname, city)
+3. Customers (cname, city)
+4. Borrow (loanno, cname, bname, amount)
+
+Queries:
+--------
+1. Display account date of customers “ABC”.
+2. Modify the size of attribute of amount in Deposit.
+3. Display names of customers living in city Pune.
+4. Display name of the city where branch “OBC” is located.
+5. Find the number of tuples in the customer relation.
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS BankDB20;
+USE BankDB20;
+
+-- Step 2: Create tables with proper constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO Branch VALUES
+('SBI', 'Mumbai'),
+('OBC', 'Delhi'),
+('HDFC', 'Pune'),
+('BOI', 'Nagpur');
+
+INSERT INTO Customers VALUES
+('ABC', 'Pune'),
+('XYZ', 'Mumbai'),
+('Pranav Bhosale', 'Nagpur'),
+('Jay Rajankar', 'Pune'),
+('Anvay Kulkarni', 'Delhi');
+
+INSERT INTO Deposit VALUES
+(101, 'ABC', 'HDFC', 10000.00, '2024-01-10'),
+(102, 'XYZ', 'SBI', 12000.00, '2024-02-15'),
+(103, 'Jay Rajankar', 'HDFC', 14000.00, '2024-03-12'),
+(104, 'Anvay Kulkarni', 'OBC', 16000.00, '2024-04-18'),
+(105, 'Pranav Bhosale', 'BOI', 11000.00, '2024-05-22');
+
+INSERT INTO Borrow VALUES
+(201, 'ABC', 'HDFC', 15000.00),
+(202, 'XYZ', 'SBI', 17000.00),
+(203, 'Jay Rajankar', 'HDFC', 20000.00),
+(204, 'Anvay Kulkarni', 'OBC', 18000.00),
+(205, 'Pranav Bhosale', 'BOI', 19000.00);
+
+-- Step 4: Queries
+
+-- 1. Display account date of customers 'ABC'
+SELECT adate FROM Deposit
+WHERE cname = 'ABC';
+
+-- 2. Modify the size of 'amount' column in Deposit (assume changing from DECIMAL(10,2) to DECIMAL(12,2))
+ALTER TABLE Deposit MODIFY amount DECIMAL(12,2);
+
+-- 3. Display customers living in city Pune
+SELECT cname FROM Customers
+WHERE city = 'Pune';
+
+-- 4. Display city where branch 'OBC' is located
+SELECT city FROM Branch
+WHERE bname = 'OBC';
+
+-- 5. Count tuples in Customers table
+SELECT COUNT(*) AS total_customers FROM Customers;

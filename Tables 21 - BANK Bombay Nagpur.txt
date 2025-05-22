@@ -1,0 +1,108 @@
+
+Tables 21 - BANK Bombay Nagpur.txt
+===================================
+
+Question:
+---------
+Create the following tables and add primary key and foreign key wherever applicable. Insert data:
+
+1. Deposit (actno, cname, bname, amount, adate)
+2. Branch (bname, city)
+3. Customers (cname, city)
+4. Borrow (loanno, cname, bname, amount)
+
+Queries:
+--------
+1. Display customer names whose living city is 'Bombay' and branch city is 'Nagpur'
+2. Display customer names whose living city is same as their branch city
+3. Display customer names who are both borrowers and depositors and live in 'Nagpur'
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS BankDB21;
+USE BankDB21;
+
+-- Step 2: Create tables with constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- Step 3: Insert data
+
+INSERT INTO Branch VALUES
+('SBI', 'Bombay'),
+('OBC', 'Nagpur'),
+('BOI', 'Pune'),
+('Axis', 'Nagpur');
+
+INSERT INTO Customers VALUES
+('Pranav Bhosale', 'Nagpur'),
+('Jay Rajankar', 'Bombay'),
+('Anvay Kulkarni', 'Pune'),
+('Krishna Gandhi', 'Nagpur'),
+('Gaurav Kaushalye', 'Bombay');
+
+INSERT INTO Deposit VALUES
+(301, 'Pranav Bhosale', 'OBC', 10000.00, '2024-01-01'),
+(302, 'Jay Rajankar', 'OBC', 15000.00, '2024-02-01'),
+(303, 'Anvay Kulkarni', 'BOI', 12000.00, '2024-03-01'),
+(304, 'Krishna Gandhi', 'Axis', 16000.00, '2024-04-01'),
+(305, 'Gaurav Kaushalye', 'SBI', 18000.00, '2024-05-01');
+
+INSERT INTO Borrow VALUES
+(401, 'Pranav Bhosale', 'OBC', 25000.00),
+(402, 'Jay Rajankar', 'Axis', 27000.00),
+(403, 'Anvay Kulkarni', 'BOI', 23000.00),
+(404, 'Krishna Gandhi', 'OBC', 30000.00),
+(405, 'Gaurav Kaushalye', 'SBI', 19000.00);
+
+-- Step 4: Queries
+
+-- 1. Customer names where living city = 'Bombay' and branch city = 'Nagpur'
+SELECT DISTINCT d.cname
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = 'Bombay' AND b.city = 'Nagpur';
+
+-- 2. Customer names where living city = branch city
+SELECT DISTINCT d.cname
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+JOIN Branch b ON d.bname = b.bname
+WHERE c.city = b.city;
+
+-- 3. Customer names who are borrowers AND depositors and live in Nagpur
+SELECT DISTINCT c.cname
+FROM Customers c
+JOIN Deposit d ON c.cname = d.cname
+JOIN Borrow b ON c.cname = b.cname
+WHERE c.city = 'Nagpur';

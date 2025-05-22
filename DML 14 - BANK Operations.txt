@@ -1,0 +1,165 @@
+
+14 DML Operations with Functions, Operators, and Sets.txt
+==========================================================
+
+Question:
+---------
+Implement all SQL DML operations with operators, functions, and set operators for the given schema:
+
+Schema:
+-------
+1. Account(Acc_no, branch_name, balance)
+2. Branch(branch_name, branch_city, assets)
+3. Customer(cust_name, cust_street, cust_city)
+4. Depositor(cust_name, acc_no)
+5. Loan(loan_no, branch_name, amount)
+6. Borrower(cust_name, loan_no)
+
+📚 Theory
+---------
+This schema models a simple banking system with customers, branches, accounts, and loans.
+We demonstrate SQL DML (INSERT, UPDATE, DELETE, SELECT) with:
+- Operators (comparison, logical)
+- Built-in functions (aggregate, string, arithmetic)
+- Set operations (UNION, INTERSECT using JOIN logic)
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS BankingSystemDB;
+USE BankingSystemDB;
+
+-- Step 2: Create tables
+CREATE TABLE Branch (
+    branch_name VARCHAR(50) PRIMARY KEY,
+    branch_city VARCHAR(50),
+    assets DECIMAL(12,2)
+);
+
+CREATE TABLE Account (
+    acc_no INT PRIMARY KEY,
+    branch_name VARCHAR(50),
+    balance DECIMAL(10,2),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Customer (
+    cust_name VARCHAR(100) PRIMARY KEY,
+    cust_street VARCHAR(100),
+    cust_city VARCHAR(50)
+);
+
+CREATE TABLE Depositor (
+    cust_name VARCHAR(100),
+    acc_no INT,
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (acc_no) REFERENCES Account(acc_no)
+);
+
+CREATE TABLE Loan (
+    loan_no INT PRIMARY KEY,
+    branch_name VARCHAR(50),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (branch_name) REFERENCES Branch(branch_name)
+);
+
+CREATE TABLE Borrower (
+    cust_name VARCHAR(100),
+    loan_no INT,
+    FOREIGN KEY (cust_name) REFERENCES Customer(cust_name),
+    FOREIGN KEY (loan_no) REFERENCES Loan(loan_no)
+);
+
+-- Step 3: Insert Sample Data (5 entries per table)
+
+INSERT INTO Branch VALUES
+('Pune Branch', 'Pune', 10000000),
+('Mumbai Branch', 'Mumbai', 15000000),
+('Nashik Branch', 'Nashik', 9000000);
+
+INSERT INTO Account VALUES
+(2001, 'Pune Branch', 10000),
+(2002, 'Pune Branch', 17000),
+(2003, 'Mumbai Branch', 13000),
+(2004, 'Mumbai Branch', 25000),
+(2005, 'Nashik Branch', 9000);
+
+INSERT INTO Customer VALUES
+('Pranav Bhosale', 'JM Road', 'Pune'),
+('Jay Rajankar', 'Churchgate', 'Mumbai'),
+('Anvay Kulkarni', 'Gangapur Road', 'Nashik'),
+('Krishna Gandhi', 'Baner', 'Pune'),
+('Gaurav Kaushalye', 'Andheri', 'Mumbai');
+
+INSERT INTO Depositor VALUES
+('Pranav Bhosale', 2001),
+('Jay Rajankar', 2002),
+('Anvay Kulkarni', 2003),
+('Krishna Gandhi', 2004),
+('Gaurav Kaushalye', 2005);
+
+INSERT INTO Loan VALUES
+(301, 'Pune Branch', 50000),
+(302, 'Mumbai Branch', 75000),
+(303, 'Nashik Branch', 60000),
+(304, 'Pune Branch', 40000),
+(305, 'Mumbai Branch', 85000);
+
+INSERT INTO Borrower VALUES
+('Pranav Bhosale', 301),
+('Jay Rajankar', 302),
+('Anvay Kulkarni', 303),
+('Krishna Gandhi', 304),
+('Gaurav Kaushalye', 305);
+
+SQL Queries:
+------------
+
+-- 1. Find average account balance at each branch
+SELECT branch_name, AVG(balance) AS avg_balance
+FROM Account
+GROUP BY branch_name;
+
+-- 2. Find number of depositors at each branch
+SELECT a.branch_name, COUNT(DISTINCT d.cust_name) AS num_depositors
+FROM Account a
+JOIN Depositor d ON a.acc_no = d.acc_no
+GROUP BY a.branch_name;
+
+-- 3. Find branches with average balance > 12000
+SELECT branch_name
+FROM Account
+GROUP BY branch_name
+HAVING AVG(balance) > 12000;
+
+-- 4. Count number of tuples in customer table
+SELECT COUNT(*) AS total_customers FROM Customer;
+
+-- 5. Set operation - all customers who either have account or loan (UNION)
+SELECT cust_name FROM Depositor
+UNION
+SELECT cust_name FROM Borrower;
+
+-- 6. Show all accounts with balance BETWEEN 10k and 20k
+SELECT * FROM Account WHERE balance BETWEEN 10000 AND 20000;
+
+-- 7. Add 5% bonus to all balances (calculated only)
+SELECT acc_no, branch_name, balance, balance * 1.05 AS bonus_balance
+FROM Account;
+
+-- 8. Customers with loans above 60000 using JOIN + filter
+SELECT b.cust_name, l.amount
+FROM Borrower b
+JOIN Loan l ON b.loan_no = l.loan_no
+WHERE l.amount > 60000;
+
+-- 9. Concatenate city and street of each customer
+SELECT cust_name, CONCAT(cust_city, ', ', cust_street) AS full_address
+FROM Customer;
+
+-- 10. LEFT JOIN: All customers with their account info (if any)
+SELECT c.cust_name, a.acc_no, a.balance
+FROM Customer c
+LEFT JOIN Depositor d ON c.cust_name = d.cust_name
+LEFT JOIN Account a ON d.acc_no = a.acc_no;

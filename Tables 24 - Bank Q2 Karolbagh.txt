@@ -1,0 +1,110 @@
+
+Tables 24 - Bank Q2 Karolbagh.txt
+==================================
+
+Question:
+---------
+Create the following tables with proper primary and foreign key constraints and insert data:
+
+1. Deposit (actno, cname, bname, amount, adate)
+2. Branch (bname, city)
+3. Customers (cname, city)
+4. Borrow (loanno, cname, bname, amount)
+
+Queries:
+--------
+1. Display amount for depositors living in the city where Anil is living.
+2. Display total loan and maximum loan taken from KAROLBAGH branch.
+3. Display total deposit of customers having account date later than ‘1-Jan-98’.
+4. Display maximum deposit of customers living in PUNE.
+
+SQL Implementation:
+--------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS BankDB24;
+USE BankDB24;
+
+-- Step 2: Create tables with constraints
+
+CREATE TABLE Branch (
+    bname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(50) PRIMARY KEY,
+    city VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(50),
+    bname VARCHAR(50),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO Branch VALUES
+('KAROLBAGH', 'Delhi'),
+('SADASHIV', 'Pune'),
+('CHANDNI', 'Mumbai'),
+('MALVIYA', 'Delhi');
+
+INSERT INTO Customers VALUES
+('Anil', 'Pune'),
+('Sunil', 'Delhi'),
+('Jay Rajankar', 'Pune'),
+('Gaurav Kaushalye', 'Mumbai'),
+('Krishna Gandhi', 'Pune');
+
+INSERT INTO Deposit VALUES
+(101, 'Anil', 'SADASHIV', 5000.00, '1999-01-01'),
+(102, 'Sunil', 'KAROLBAGH', 6000.00, '1997-06-15'),
+(103, 'Jay Rajankar', 'SADASHIV', 7000.00, '1998-06-16'),
+(104, 'Gaurav Kaushalye', 'CHANDNI', 3000.00, '1999-09-01'),
+(105, 'Krishna Gandhi', 'SADASHIV', 8000.00, '2000-01-20');
+
+INSERT INTO Borrow VALUES
+(201, 'Anil', 'KAROLBAGH', 15000.00),
+(202, 'Sunil', 'CHANDNI', 18000.00),
+(203, 'Jay Rajankar', 'KAROLBAGH', 25000.00),
+(204, 'Gaurav Kaushalye', 'MALVIYA', 12000.00),
+(205, 'Krishna Gandhi', 'KAROLBAGH', 17000.00);
+
+-- Step 4: Required Queries
+
+-- 1. Display deposit amounts where depositor lives in the same city as Anil
+SELECT d.amount
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = (SELECT city FROM Customers WHERE cname = 'Anil');
+
+-- 2. Display total and max loan from KAROLBAGH branch
+SELECT SUM(amount) AS total_loan, MAX(amount) AS max_loan
+FROM Borrow
+WHERE bname = 'KAROLBAGH';
+
+-- 3. Total deposit where account date > '1998-01-01'
+SELECT SUM(amount) AS total_deposit
+FROM Deposit
+WHERE adate > '1998-01-01';
+
+-- 4. Max deposit by customers living in PUNE
+SELECT MAX(d.amount) AS max_deposit
+FROM Deposit d
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = 'PUNE';

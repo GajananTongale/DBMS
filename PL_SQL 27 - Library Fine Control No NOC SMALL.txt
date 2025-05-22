@@ -1,0 +1,112 @@
+
+PLSQL 27 - Fine Calculation Borrower.txt
+========================================
+
+Question:
+---------
+Write a PL/SQL block of code using the schema:
+
+Tables:
+-------
+1. Borrower(Rollin, Name, DateofIssue, NameofBook, Status)
+2. Fine(Roll_no, Date, Amt)
+
+Requirements:
+-------------
+- Accept roll_no and name of book as input
+- Calculate number of days since issue
+- Fine rules:
+    • 15–30 days: ₹5/day
+    • >30 days: ₹50/day
+- Update book Status to 'R' after return
+- Insert into Fine table only if fine > 0
+- Use control structures and exception-safe logic
+
+SQL + Procedure Implementation:
+-------------------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS LibraryDB27;
+USE LibraryDB27;
+
+-- Step 2: Create tables
+
+CREATE TABLE Borrower (
+    Rollin INT,
+    Name VARCHAR(50),
+    DateOfIssue DATE,
+    NameOfBook VARCHAR(100),
+    Status CHAR(1),
+    PRIMARY KEY (Rollin, NameOfBook)
+);
+
+CREATE TABLE Fine (
+    Roll_no INT,
+    Date DATE,
+    Amt DECIMAL(10,2)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO Borrower VALUES
+(101, 'Pranav Bhosale', '2024-04-01', 'Operating Systems', 'I'),
+(102, 'Jay Rajankar', '2024-04-25', 'DBMS', 'I'),
+(103, 'Anvay Kulkarni', '2024-05-10', 'Computer Networks', 'I'),
+(104, 'Krishna Gandhi', '2024-03-10', 'Software Engineering', 'I'),
+(105, 'Gaurav Kaushalye', '2024-05-01', 'Data Structures', 'I');
+
+-- Step 4: Procedure
+
+DELIMITER $$
+
+CREATE PROCEDURE Return_Book(IN input_roll INT, IN input_book VARCHAR(100))
+BEGIN
+    DECLARE doi DATE;
+    DECLARE days_held INT DEFAULT 0;
+    DECLARE fine_amt DECIMAL(10,2) DEFAULT 0;
+    DECLARE row_exists INT DEFAULT 0;
+
+    -- Check if issued record exists
+    SELECT COUNT(*) INTO row_exists
+    FROM Borrower
+    WHERE Rollin = input_roll AND NameOfBook = input_book AND Status = 'I';
+
+    IF row_exists = 0 THEN
+        SELECT 'No active issued record found for this user and book' AS Error;
+    ELSE
+        -- Get DateOfIssue
+        SELECT DateOfIssue INTO doi
+        FROM Borrower
+        WHERE Rollin = input_roll AND NameOfBook = input_book;
+
+        -- Compute days and fine
+        SET days_held = DATEDIFF(CURDATE(), doi);
+
+        IF days_held > 30 THEN
+            SET fine_amt = days_held * 50;
+        ELSEIF days_held >= 15 THEN
+            SET fine_amt = days_held * 5;
+        END IF;
+
+        -- Update book status
+        UPDATE Borrower
+        SET Status = 'R'
+        WHERE Rollin = input_roll AND NameOfBook = input_book;
+
+        -- Insert fine if applicable
+        IF fine_amt > 0 THEN
+            INSERT INTO Fine VALUES (input_roll, CURDATE(), fine_amt);
+        END IF;
+
+        SELECT CONCAT('Return recorded. Fine: ₹', fine_amt) AS Result;
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- Step 5: Example usage
+CALL Return_Book(101, 'Operating Systems');
+
+-- Step 6: View changes
+SELECT * FROM Fine;
+SELECT * FROM Borrower;

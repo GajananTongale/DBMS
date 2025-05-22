@@ -1,0 +1,24 @@
+db.sites.insertMany([
+{ url: "https://example.com", dateofaccess: new Date("2025-05-01") },
+{ url: "https://example.com", dateofaccess: new Date("2025-05-15") },
+{ url: "https://example.com", dateofaccess: new Date("2025-06-05") },
+{ url: "https://test.com", dateofaccess: new Date("2025-05-20") },
+{ url: "https://test.com", dateofaccess: new Date("2025-05-25") },
+{ url: "https://test.com", dateofaccess: new Date("2025-06-01") }
+])
+var mapFunction = function () {
+var date = new Date(this.dateofaccess);
+var yearMonth = date.getFullYear() + "-" + (date.getMonth() + 1); // e.g., "2025-5"
+emit({ url: this.url, month: yearMonth }, 1);
+};
+var reduceFunction = function (key, values) {
+return Array.sum(values);
+};
+db.sites.mapReduce(
+mapFunction,
+reduceFunction,
+{
+out: "site_access_per_month"
+}
+);
+db.site_access_per_month.find().pretty();

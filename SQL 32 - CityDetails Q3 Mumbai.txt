@@ -1,0 +1,96 @@
+
+SQL 32 - CityDetails Q3 Mumbai.txt
+==================================
+
+Question:
+---------
+Create normalized database structure based on:
+Citydetails(_id, name, area, population(...), geography(...))
+
+Schema:
+-------
+1. City(_id INT, name VARCHAR(50), area FLOAT)
+2. Population(_id INT, total INT, adults INT, seniorcitizens INT, sexratio FLOAT)
+3. Geography(_id INT, avgtemp FLOAT, avgrainfall FLOAT, longitude FLOAT, latitude FLOAT)
+
+SQL Implementation:
+-------------------
+
+-- Step 1: Create and use the database
+CREATE DATABASE IF NOT EXISTS CityDB32;
+USE CityDB32;
+
+-- Step 2: Create the normalized tables
+
+CREATE TABLE City (
+    _id INT PRIMARY KEY,
+    name VARCHAR(50),
+    area FLOAT
+);
+
+CREATE TABLE Population (
+    _id INT PRIMARY KEY,
+    total INT,
+    adults INT,
+    seniorcitizens INT,
+    sexratio FLOAT,
+    FOREIGN KEY (_id) REFERENCES City(_id)
+);
+
+CREATE TABLE Geography (
+    _id INT PRIMARY KEY,
+    avgtemp FLOAT,
+    avgrainfall FLOAT,
+    longitude FLOAT,
+    latitude FLOAT,
+    FOREIGN KEY (_id) REFERENCES City(_id)
+);
+
+-- Step 3: Insert data
+
+INSERT INTO City VALUES
+(1, 'Pune', 516.0),
+(2, 'Mumbai', 603.4),
+(3, 'Delhi', 1484.0),
+(4, 'Nagpur', 227.4),
+(5, 'Hyderabad', 650.0);
+
+INSERT INTO Population VALUES
+(1, 7800000, 5600000, 800000, 915.2),
+(2, 12400000, 9800000, 1300000, 850.5),
+(3, 19000000, 14000000, 1800000, 899.7),
+(4, 3500000, 2700000, 400000, 930.8),
+(5, 10500000, 8000000, 1000000, 905.4);
+
+INSERT INTO Geography VALUES
+(1, 26.5, 700.2, 73.8567, 18.5204),
+(2, 27.3, 2450.6, 72.8777, 19.0760),
+(3, 25.9, 790.4, 77.1025, 28.7041),
+(4, 27.8, 1100.7, 79.0882, 21.1458),
+(5, 28.0, 810.9, 78.4867, 17.3850);
+
+-- Step 4: Queries
+
+-- 1. Area-wise total population sorted in increasing order
+SELECT c.area, SUM(p.total) AS total_population
+FROM City c
+JOIN Population p ON c._id = p._id
+GROUP BY c.area
+ORDER BY c.area ASC;
+
+-- 2. Cities with average rainfall > 60
+SELECT c.name, c.area
+FROM City c
+JOIN Geography g ON c._id = g._id
+WHERE g.avgrainfall > 60;
+
+-- 3. Create index on city and area, and find max population in Mumbai
+CREATE INDEX idx_city_area ON City(name, area);
+
+SELECT MAX(p.total) AS Max_Population
+FROM City c
+JOIN Population p ON c._id = p._id
+WHERE c.name = 'Mumbai';
+
+-- 4. Create index on name
+CREATE INDEX idx_city_name ON City(name);

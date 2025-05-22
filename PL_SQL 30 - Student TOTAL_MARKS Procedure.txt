@@ -1,0 +1,94 @@
+
+PLSQL 30 - Student Grade Classification.txt
+===========================================
+
+Question:
+---------
+Write a stored procedure named `proc_Grade` for categorizing students based on total marks.
+If:
+- marks <=1500 and >=990 → 'Distinction'
+- marks between 989 and 900 → 'First Class'
+- marks between 899 and 825 → 'Higher Second Class'
+
+Schema:
+-------
+1. Stud_Marks(name, total_marks)
+2. Result(roll INT AUTO_INCREMENT, name, class)
+
+SQL + PL/SQL Implementation:
+----------------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS StudentDB30;
+USE StudentDB30;
+
+-- Step 2: Create input and result tables
+
+CREATE TABLE Stud_Marks (
+    name VARCHAR(50),
+    total_marks INT
+);
+
+CREATE TABLE Result (
+    roll INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50),
+    class VARCHAR(30)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO Stud_Marks VALUES
+('Pranav Bhosale', 1200),
+('Jay Rajankar', 980),
+('Anvay Kulkarni', 910),
+('Krishna Gandhi', 850),
+('Gaurav Kaushalye', 800),
+('Sunil Patil', 1490),
+('Anita Desai', 875),
+('Swapnil More', 930);
+
+-- Step 4: Stored Procedure
+
+DELIMITER $$
+
+CREATE PROCEDURE proc_Grade()
+BEGIN
+    DECLARE done INT DEFAULT 0;
+    DECLARE sname VARCHAR(50);
+    DECLARE marks INT;
+    DECLARE class_type VARCHAR(30);
+
+    DECLARE cur CURSOR FOR SELECT name, total_marks FROM Stud_Marks;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO sname, marks;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        IF marks BETWEEN 990 AND 1500 THEN
+            SET class_type = 'Distinction';
+        ELSEIF marks BETWEEN 900 AND 989 THEN
+            SET class_type = 'First Class';
+        ELSEIF marks BETWEEN 825 AND 899 THEN
+            SET class_type = 'Higher Second Class';
+        ELSE
+            SET class_type = 'Fail';
+        END IF;
+
+        INSERT INTO Result(name, class) VALUES (sname, class_type);
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+-- Step 5: Execute procedure
+CALL proc_Grade();
+
+-- Step 6: View result
+SELECT * FROM Result;

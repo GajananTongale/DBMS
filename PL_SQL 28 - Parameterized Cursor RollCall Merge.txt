@@ -1,0 +1,91 @@
+
+PLSQL 28 - Parameterized Cursor RollCall Merge.txt
+==================================================
+
+Question:
+---------
+Write a PL/SQL block of code using a parameterized cursor that will merge the data
+available in the newly created table N_RollCall with the data available in the table
+O_RollCall. If the data in the first table already exists in the second table, then it should be skipped.
+
+Schema:
+-------
+1. N_RollCall (roll_no INT, name VARCHAR(50))
+2. O_RollCall (roll_no INT, name VARCHAR(50))
+
+SQL + PL/SQL Implementation:
+----------------------------
+
+-- Step 1: Create and use database
+CREATE DATABASE IF NOT EXISTS RollCallDB;
+USE RollCallDB;
+
+-- Step 2: Create the tables
+
+CREATE TABLE N_RollCall (
+    roll_no INT,
+    name VARCHAR(50)
+);
+
+CREATE TABLE O_RollCall (
+    roll_no INT PRIMARY KEY,
+    name VARCHAR(50)
+);
+
+-- Step 3: Insert sample data
+
+INSERT INTO N_RollCall VALUES
+(101, 'Pranav Bhosale'),
+(102, 'Jay Rajankar'),
+(103, 'Anvay Kulkarni'),
+(104, 'Krishna Gandhi'),
+(105, 'Gaurav Kaushalye');
+
+INSERT INTO O_RollCall VALUES
+(101, 'Pranav Bhosale'),
+(104, 'Krishna Gandhi');
+
+-- Step 4: Procedure using parameterized cursor
+
+DELIMITER $$
+
+CREATE PROCEDURE Merge_RollCall()
+BEGIN
+    DECLARE rno INT;
+    DECLARE nm VARCHAR(50);
+    DECLARE exists_flag INT DEFAULT 0;
+    DECLARE done INT DEFAULT FALSE;
+
+    -- Parameterized cursor
+    DECLARE cur CURSOR FOR
+        SELECT roll_no, name FROM N_RollCall;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+    OPEN cur;
+
+    read_loop: LOOP
+        FETCH cur INTO rno, nm;
+        IF done THEN
+            LEAVE read_loop;
+        END IF;
+
+        -- Check if roll_no already exists in O_RollCall
+        SELECT COUNT(*) INTO exists_flag FROM O_RollCall WHERE roll_no = rno;
+
+        -- Insert if not found
+        IF exists_flag = 0 THEN
+            INSERT INTO O_RollCall VALUES (rno, nm);
+        END IF;
+    END LOOP;
+
+    CLOSE cur;
+END$$
+
+DELIMITER ;
+
+-- Step 5: Execute procedure
+CALL Merge_RollCall();
+
+-- Step 6: View final output
+SELECT * FROM O_RollCall;
